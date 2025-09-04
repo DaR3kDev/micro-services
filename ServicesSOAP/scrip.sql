@@ -35,3 +35,5 @@ CREATE TABLE IF NOT EXISTS Product (
     CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES Category(idCategory)
 );
 
+INSERT INTO Category (name, state) VALUES ('Alimentos', 'Activo'),('Electrodomésticos', 'Activo'),('Licor', 'Activo');
+

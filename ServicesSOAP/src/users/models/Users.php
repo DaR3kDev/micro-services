@@ -70,7 +70,6 @@ class Users
             : ['success' => false, 'message' => 'Credenciales inválidas'];
     }
 
-
     public function update(int $idUsers, array $data): array
     {
         // Validar datos

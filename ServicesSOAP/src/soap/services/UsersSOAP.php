@@ -1,50 +1,51 @@
 <?php
-
-require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../users/services/UsersService.php';
-require_once realpath(__DIR__ . '/../../../utils/ArrayHelper.php');
+require_once __DIR__ . '/../../../utils/ArrayHelper.php';
 
 use App\users\services\UsersService;
 
-$namespace = "UserServiceSOAP";
+function registerUserServices($server, $namespace)
+{
+    // ============================
+    // Definición de tipos complejos
+    // ============================
+    $server->wsdl->addComplexType('UserInput', 'complexType', 'struct', 'all', '', [
+        'first_name' => ['name' => 'first_name', 'type' => 'xsd:string'],
+        'last_name'  => ['name' => 'last_name',  'type' => 'xsd:string'],
+        'email'      => ['name' => 'email',      'type' => 'xsd:string'],
+        'password'   => ['name' => 'password',   'type' => 'xsd:string'],
+        'rol'        => ['name' => 'rol',        'type' => 'xsd:string']
+    ]);
 
-// Crear servidor SOAP específico
-$server = new \soap_server();
-$server->configureWSDL("UserService", $namespace);
+    $server->wsdl->addComplexType('LoginInput', 'complexType', 'struct', 'all', '', [
+        'email'    => ['name' => 'email',    'type' => 'xsd:string'],
+        'password' => ['name' => 'password', 'type' => 'xsd:string']
+    ]);
 
-// Tipos complejos
-$server->wsdl->addComplexType('UserInput', 'complexType', 'struct', 'all', '', [
-    'first_name' => ['name' => 'first_name', 'type' => 'xsd:string'],
-    'last_name'  => ['name' => 'last_name', 'type' => 'xsd:string'],
-    'email'      => ['name' => 'email', 'type' => 'xsd:string'],
-    'password'   => ['name' => 'password', 'type' => 'xsd:string'],
-    'rol'        => ['name' => 'rol', 'type' => 'xsd:string']
-]);
+    $server->wsdl->addComplexType('UpdateUserInput', 'complexType', 'struct', 'all', '', [
+        'id'         => ['name' => 'id',        'type' => 'xsd:int'],
+        'first_name' => ['name' => 'first_name', 'type' => 'xsd:string'],
+        'last_name'  => ['name' => 'last_name', 'type' => 'xsd:string'],
+        'email'      => ['name' => 'email',     'type' => 'xsd:string'],
+        'password'   => ['name' => 'password',  'type' => 'xsd:string'],
+        'rol'        => ['name' => 'rol',       'type' => 'xsd:string']
+    ]);
 
-$server->wsdl->addComplexType('LoginInput', 'complexType', 'struct', 'all', '', [
-    'email'    => ['name' => 'email', 'type' => 'xsd:string'],
-    'password' => ['name' => 'password', 'type' => 'xsd:string']
-]);
+    // ============================
+    // Registro de métodos
+    // ============================
+    $server->register('addUserSOAP',         ['user' => 'tns:UserInput'],       ['return' => 'xsd:string'], $namespace);
+    $server->register('updateUserSOAP',      ['data' => 'tns:UpdateUserInput'], ['return' => 'xsd:string'], $namespace);
+    $server->register('listUsersSOAP',       [],                               ['return' => 'xsd:string'], $namespace);
+    $server->register('findUserByEmailSOAP', ['email' => 'xsd:string'],         ['return' => 'xsd:string'], $namespace);
+    $server->register('loginUserSOAP',       ['data' => 'tns:LoginInput'],      ['return' => 'xsd:string'], $namespace);
+    $server->register('deactivateUserSOAP',  ['id' => 'xsd:int'],               ['return' => 'xsd:string'], $namespace);
+    $server->register('hardDeleteUserSOAP',  ['id' => 'xsd:int'],               ['return' => 'xsd:string'], $namespace);
+}
 
-$server->wsdl->addComplexType('UpdateUserInput', 'complexType', 'struct', 'all', '', [
-    'id'        => ['name' => 'id', 'type' => 'xsd:int'],
-    'first_name' => ['name' => 'first_name', 'type' => 'xsd:string'],
-    'last_name' => ['name' => 'last_name', 'type' => 'xsd:string'],
-    'email'     => ['name' => 'email', 'type' => 'xsd:string'],
-    'password'  => ['name' => 'password', 'type' => 'xsd:string'],
-    'rol'       => ['name' => 'rol', 'type' => 'xsd:string']
-]);
-
-// Registrar métodos SOAP
-$server->register('addUserSOAP',           ['user' => 'tns:UserInput'],        ['return' => 'xsd:string'], $namespace);
-$server->register('updateUserSOAP',        ['data' => 'tns:UpdateUserInput'],  ['return' => 'xsd:string'], $namespace);
-$server->register('listUsersSOAP',         [],                                ['return' => 'xsd:string'], $namespace);
-$server->register('findUserByEmailSOAP',   ['email' => 'xsd:string'],          ['return' => 'xsd:string'], $namespace);
-$server->register('loginUserSOAP',         ['data' => 'tns:LoginInput'],       ['return' => 'xsd:string'], $namespace);
-$server->register('deactivateUserSOAP',    ['id' => 'xsd:int'],                ['return' => 'xsd:string'], $namespace);
-$server->register('hardDeleteUserSOAP',    ['id' => 'xsd:int'],                ['return' => 'xsd:string'], $namespace);
-
+// ============================
 // Funciones SOAP
+// ============================
 function addUserSOAP($user)
 {
     $service = new UsersService();
@@ -58,7 +59,6 @@ function addUserSOAP($user)
 function updateUserSOAP($data)
 {
     $service = new UsersService();
-
     $id = is_array($data) ? ($data['id'] ?? null) : ($data->id ?? null);
 
     if (!$id) {
@@ -71,6 +71,7 @@ function updateUserSOAP($data)
         ? "Usuario actualizado correctamente"
         : "Error al actualizar usuario: " . implode("; ", $result['errors'] ?? []);
 }
+
 function listUsersSOAP()
 {
     $service = new UsersService();
@@ -109,8 +110,3 @@ function hardDeleteUserSOAP($id)
         ? "Usuario eliminado permanentemente"
         : "Error al eliminar usuario permanentemente";
 }
-
-// Procesar solicitud de este servicio
-$POST_DATA = file_get_contents("php://input");
-$server->service($POST_DATA);
-exit();
