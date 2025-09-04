@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\config;
 
 use PDO;
@@ -8,7 +7,6 @@ use PDOException;
 use Dotenv\Dotenv;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
-
 
 class Database
 {
